@@ -19,8 +19,7 @@ std::string getUrl(const Napi::CallbackInfo& info)
 #ifndef USE_DEFAULT_SERVER_URL
         return url;
 #endif
-    }
-    url.assign(defaultServer);
+        url.assign(defaultServer);
     }
     std::transform(url.begin(), url.end(), url.begin(), [](unsigned char c) {return std::tolower(c); });
     if (url.substr(0, 6).compare("https:") == 0) { // do not support https proxies for now
