@@ -1,0 +1,5 @@
+/build/
+/build-tmp-napi-v4/
+/lib/binding/
+/node_modules/
+/.idea/
