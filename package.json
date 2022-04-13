@@ -1,6 +1,6 @@
 {
   "name": "@zelloptt/desktop-proxy-settings",
-  "version": "0.9.1",
+  "version": "0.9.3",
   "description": "This package reads system proxy settings on Windows and Mac",
   "main": "index.js",
   "gypfile": true,
@@ -8,6 +8,7 @@
     "install": "node-pre-gyp install --fallback-to-build",
     "make": "node-pre-gyp rebuild --build-from-source package publish",
     "force_make": "node-pre-gyp rebuild --build-from-source --verbose",
+    "makem1": "node-pre-gyp rebuild --build-from-source --verbose --target_arch=arm64 package publish",
     "make32": "node-pre-gyp rebuild --build-from-source --verbose --target_arch=ia32 package publish",
     "maked": "node-pre-gyp rebuild --build-from-source --debug --verbose package publish",
     "test": "echo \"Test not applicable\""
@@ -29,18 +30,18 @@
   },
   "binary": {
     "module_name": "desktop_proxy_settings",
-    "module_path": "./lib/binding/napi-v{napi_build_version}",
-    "remote_path": "./{module_name}/v{version}/{configuration}",
     "host": "https://zello-desktop.s3.amazonaws.com",
-    "package_name": "napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
+    "module_path": "./lib/binding/v{napi_build_version}-{node_abi}-{platform}-{arch}/",
+    "remote_path": "./{module_name}/v{version}/{configuration}/",
+    "package_name": "{module_name}-v{version}-napi{napi_build_version}-{node_abi}-{platform}-{arch}.tar.gz",
     "napi_versions": [
-      4
+      4, 6, 7, 8
     ]
   },
   "homepage": "https://github.com/zelloptt/proxy-settings#readme",
   "devDependencies": {
     "aws-sdk": "2.1011.0",
-    "np": "7.5.0"
+    "np": "7.6.1"
   },
   "np": {
     "yarn": false,
@@ -48,8 +49,8 @@
     "no-tests": true
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "1.0.5",
-    "node-addon-api": "4.2.0",
-    "node-gyp": "8.3.0"
+    "@mapbox/node-pre-gyp": "1.0.9",
+    "node-addon-api": "4.3.0",
+    "node-gyp": "9.0.0"
   }
 }

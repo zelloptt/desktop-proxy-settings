@@ -3,3 +3,6 @@
 /lib/binding/
 /node_modules/
 /.idea/
+/build-tmp-napi-v8/
+/build-tmp-napi-v7/
+/build-tmp-napi-v6/
