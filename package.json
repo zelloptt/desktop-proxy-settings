@@ -1,6 +1,6 @@
 {
   "name": "@zelloptt/desktop-proxy-settings",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "This package reads system proxy settings on Windows and Mac",
   "main": "index.js",
   "gypfile": true,
@@ -52,8 +52,8 @@
     "no-tests": true
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "1.0.9",
-    "node-addon-api": "4.3.0",
-    "node-gyp": "9.0.0"
+    "@mapbox/node-pre-gyp": "1.0.10",
+    "node-addon-api": "5.0.0",
+    "node-gyp": "9.1.0"
   }
 }
