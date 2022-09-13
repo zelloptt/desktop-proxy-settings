@@ -35,16 +35,13 @@
     "remote_path": "./{module_name}/v{version}/{configuration}/",
     "package_name": "{module_name}-v{version}-napi{napi_build_version}-{node_abi}-{platform}-{arch}.tar.gz",
     "napi_versions": [
-      4,
-      6,
-      7,
-      8
+      4
     ]
   },
   "homepage": "https://github.com/zelloptt/proxy-settings#readme",
   "devDependencies": {
-    "aws-sdk": "2.1011.0",
-    "np": "7.6.1"
+    "aws-sdk": "2.1215.0",
+    "np": "7.6.2"
   },
   "np": {
     "yarn": false,
