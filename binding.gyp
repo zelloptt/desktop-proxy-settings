@@ -30,8 +30,7 @@
                 "GCC_SYMBOLS_PRIVATE_EXTERN": "YES"
                 },
                 "libraries": [
-                    '-framework CoreFoundation',
-                    '-framework AppKit'
+                    '-framework CoreFoundation'
                 ]
       		}],
         	["OS=='win'", {

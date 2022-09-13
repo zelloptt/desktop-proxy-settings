@@ -1,8 +1,6 @@
 #include "ProxySettings.h"
 #define TARGET_OS_MAC
 #import <Foundation/Foundation.h>
-#import <ApplicationServices/ApplicationServices.h>
-#import <AppKit/AppKit.h>
 #include <sstream>
 
 static const std::string defaultServer("http://default.zellowork.com");
