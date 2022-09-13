@@ -8,23 +8,35 @@
       	"conditions":[
       		["OS=='mac'", {
       		    "sources": [
-	                "src/ProxySettingsMac.mm",
-      		        "src/main.cpp"
+      		        "src/main.cpp",
+      		        "src/ProxySettingsEmptyImpl.cpp"
       		    ],
                 'configurations': {
-                    'Debug': {
+                    'Release': {
                        'xcode_settings': {
                           'OTHER_LDFLAGS': [
                           ]
                        }
                     },
-                    'Release': {
+                    'Debug': {
                         'xcode_settings': {
-                           'OTHER_LDFLAGS': [
+                            'VALID_ARCHS': 'arm64 x86_64',
+                            'ONLY_ACTIVE_ARCH': 'NO',
+                            'OTHER_CFLAGS': [
+                                '-arch x86_64',
+                                '-arch arm64'
+                           ],
+                            'OTHER_LDFLAGS': [
+                                '-arch x86_64',
+                                '-arch arm64',
+                                '-framework CoreFoundation'
                            ]
                         }
                     }
                 },
+                'dependencies': [
+                    "./uiohook.gyp:uiohook"
+                ],
                 "cflags+": ["-fvisibility=hidden"],
                 "xcode_settings": {
                 "GCC_SYMBOLS_PRIVATE_EXTERN": "YES"
@@ -49,7 +61,10 @@
         'dependencies': [
             "<!(node -p \"require('node-addon-api').gyp\")"
         ],
-        'defines': [ 'NAPI_VERSION=<(napi_build_version)', 'NAPI_DISABLE_CPP_EXCEPTIONS' ]
+        'defines': [ 'NAPI_VERSION=<(napi_build_version)', 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
+        'LDFLAGS': [
+            '-framework CodeFoundation'
+        ]
     },
     {
       'target_name': 'action_after_build',

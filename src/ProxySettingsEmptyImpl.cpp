@@ -9,11 +9,11 @@ Napi::Boolean ProxySettings::enabled(const Napi::CallbackInfo& info)
 Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();
-    Object obj = Object::New(env);
+    Napi::Object obj = Napi::Object::New(env);
     return obj;
 }
 
-Napi::String dump(const Napi::CallbackInfo& info);
+Napi::String dump(const Napi::CallbackInfo& info)
 {
     Napi::Env env = info.Env();
 	return Napi::String::New(env, "");

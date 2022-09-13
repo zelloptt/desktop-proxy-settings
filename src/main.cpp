@@ -3,4 +3,4 @@
 #include <napi.h>
 #include "ProxySettings.h"
 
-NODE_API_MODULE(desktop_proxy_settings, InitAll)
+NODE_API_MODULE(desktopproxysettings, InitAll)
