@@ -31,9 +31,9 @@
   "binary": {
     "module_name": "desktop_proxy_settings",
     "host": "https://zello-desktop.s3.amazonaws.com",
-    "module_path": "./lib/binding/v{napi_build_version}-{node_abi}-{platform}-{arch}/",
+    "module_path": "./lib/binding/napi-v{napi_build_version}",
     "remote_path": "./{module_name}/v{version}/{configuration}/",
-    "package_name": "{module_name}-v{version}-napi{napi_build_version}-{node_abi}-{platform}-{arch}.tar.gz",
+    "package_name": "napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
     "napi_versions": [
       4
     ]
