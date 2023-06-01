@@ -82,7 +82,8 @@ bool isDirect(CFDictionaryRef proxy)
 
 bool isProxySupported(CFDictionaryRef proxy)
 {
-    return PP_HTTP == parseProxyType(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxy, kCFProxyTypeKey)));
+    PROXY_PROTO type = parseProxyType(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxy, kCFProxyTypeKey)));
+    return PP_HTTP == type || PP_PAC == type;
 }
 
 class Proxies
@@ -128,6 +129,21 @@ public:
         if (enabled) {
             host.assign(convert(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(systemProxy, kCFNetworkProxiesHTTPProxy))));
             CFNumberGetValue(reinterpret_cast<CFNumberRef>(CFDictionaryGetValue(systemProxy, kCFNetworkProxiesHTTPPort)), kCFNumberSInt32Type, &port);
+        }
+        return enabled;
+    }
+
+    bool getSystemPacProxy(std::string& url, std::string& script) const
+    {
+        if (!systemProxy) {
+            return false;
+        }
+        long enabled = 0;
+        url.clear();
+        CFNumberGetValue(reinterpret_cast<CFNumberRef>(CFDictionaryGetValue(systemProxy, kCFNetworkProxiesProxyAutoConfigEnable)), kCFNumberSInt32Type, &enabled);
+        if (enabled) {
+            url.assign(convert(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(systemProxy, kCFNetworkProxiesProxyAutoConfigURLString))));
+            script.assign(convert(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(systemProxy, kCFNetworkProxiesProxyAutoConfigJavaScript))));
         }
         return enabled;
     }

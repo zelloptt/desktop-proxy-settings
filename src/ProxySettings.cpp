@@ -58,7 +58,12 @@ Napi::Boolean ProxySettings::enabled(const Napi::CallbackInfo& info)
     Napi::Env env = info.Env();
     ProxyRegistry storage;
     DWORD enabled = 0;
-	return Napi::Boolean::New(env, storage.get("ProxyEnable", enabled) && enabled);
+    bool proxyEnabled = storage.get("ProxyEnable", enabled) && enabled;
+    if (!proxyEnabled) {
+        std::string pacScript;
+        proxyEnabled = storage.get("AutoConfigURL", pacScript) && !pacScript.empty();
+    }
+	return Napi::Boolean::New(env, proxyEnabled);
 }
 
 Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
@@ -79,6 +84,8 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
         } else {
             str.append("server+port=").append(server).append(",delimiter not found!");
         }
+    } else if (storage.get("AutoConfigURL", str) && !str.empty()) {
+        str.append("Proxy enabled: using pac script ").append(str);
     } else {
         str.append("Proxy not enabled");
     }
@@ -106,7 +113,13 @@ Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
             object.Set("enabled", Napi::Boolean::New(env, true));
         }
     } else {
-        object.Set("enabled",  Napi::Boolean::New(env, false));
+        std::string pacScript;
+        if (storage.get("AutoConfigURL", pacScript) && !pacScript.empty()) {
+            object.Set("enabled", Napi::Boolean::New(env, true));
+            object.Set("pac", Napi::String::New(env, pacScript.c_str()));
+        } else {
+            object.Set("enabled",  Napi::Boolean::New(env, false));
+        }
     }
     return object;
 }
