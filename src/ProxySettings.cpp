@@ -79,10 +79,10 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
        str.append("ProxyRead:Ok,");
        std::string::size_type portOffset = server.find_last_of(L':');
         if (portOffset != std::string::npos) {
-            str.append("server=").append(server.substr(0, portOffset));
+            str.append("host=").append(server.substr(0, portOffset));
             str.append(",port=").append(server.substr(portOffset + 1));
         } else {
-            str.append("server+port=").append(server).append(",delimiter not found!");
+            str.append("host+port=").append(server).append(",delimiter not found!");
         }
     } else if (storage.get("AutoConfigURL", str) && !str.empty()) {
         str.append("Proxy enabled: using pac script ").append(str);
@@ -101,13 +101,14 @@ Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
     if (storage.get("ProxyEnable", enabled) && enabled) {
         std::string server;
         if (storage.get("ProxyServer", server)) {
+            object.Set("protocol", Napi::Number::New(env, 0)); // 0 -- http
             object.Set("enabled", Napi::Boolean::New(env, true));
             std::string::size_type portOffset = server.find_last_of(L':');
             if (portOffset != std::string::npos) {
-                object.Set("server", Napi::String::New(env, server.substr(0, portOffset).c_str()));
+                object.Set("host", Napi::String::New(env, server.substr(0, portOffset).c_str()));
                 object.Set("port", Napi::Number::New(env, atol(server.substr(portOffset + 1).c_str())));
             } else {
-                object.Set("server", Napi::String::New(env, server.c_str()));
+                object.Set("host", Napi::String::New(env, server.c_str()));
             }
         } else {
             object.Set("enabled", Napi::Boolean::New(env, true));

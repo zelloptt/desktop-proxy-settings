@@ -189,8 +189,16 @@ bool saveProxyToObject(CFDictionaryRef proxy, Napi::Object& object, const Napi::
     std::string server = convert(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxy, kCFProxyHostNameKey)));
     if (!server.empty() && port > 0) {
         object.Set("enabled", Napi::Boolean::New(env, true));
+        unsigned uProxyProtocol = 0;  // 0 -- http
+        PROXY_PROTO type = parseProxyType(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxy, kCFProxyTypeKey)));
+        if (type == PP_HTTPS) {
+            uProxyProtocol = 1;
+        } else if (type == PP_SOCKS5) {
+            uProxyProtocol = 2;
+        }
+        object.Set("protocol", Napi::Number::New(env, uProxyProtocol));
         object.Set("port", Napi::Number::New(env, port));
-        object.Set("server", Napi::String::New(env, server.c_str()));
+        object.Set("host", Napi::String::New(env, server.c_str()));
         std::string username = convert(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxy, kCFProxyUsernameKey)));
         std::string password = convert(reinterpret_cast<CFStringRef>(CFDictionaryGetValue(proxy, kCFProxyPasswordKey)));
         if (!username.empty() && !password.empty()) {
@@ -242,7 +250,7 @@ Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
         if (proxies.getSystemHttpProxy(host, port)) {
             object.Set("enabled", Napi::Boolean::New(env, true));
             object.Set("port", Napi::Number::New(env, port));
-            object.Set("server", Napi::String::New(env, host.c_str()));
+            object.Set("host", Napi::String::New(env, host.c_str()));
         }
     }
 
