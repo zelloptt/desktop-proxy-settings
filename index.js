@@ -19,8 +19,8 @@ class ProxySettings {
     }
   }
 
-  dump() {
-    return this.impl.dump();
+  dump(url) {
+    return this.impl.dump(url);
   }
 
   openSystemSettings() {
