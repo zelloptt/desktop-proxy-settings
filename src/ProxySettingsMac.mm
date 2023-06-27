@@ -1,7 +1,8 @@
 #include "ProxySettings.h"
 #define TARGET_OS_MAC
 #import <Foundation/Foundation.h>
-#include <sstream>
+#import <sstream>
+#import <iostream>
 
 static const std::string defaultServer("http://default.zellowork.com");
 
@@ -37,12 +38,12 @@ std::string convert(CFStringRef strRef)
     }
     if (size_t length = static_cast<size_t>(CFStringGetLength(strRef))) {
         if (const char* ptr = CFStringGetCStringPtr(strRef, kCFStringEncodingUTF8)) {
-            str.assign(ptr);
+            str.assign(ptr, length);
             return str;
         }
         size_t maxLength = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8) + 1;
-        if (char* buffer = new char[maxLength]) {
-            buffer[0] = buffer[maxLength - 1] = 0;
+        if (char* buffer = new char[maxLength + 1]) {
+            buffer[0] = buffer[maxLength] = 0;
             CFStringGetCString(strRef, buffer, maxLength, kCFStringEncodingUTF8);
             str.assign(buffer);
             delete[] buffer;
@@ -76,7 +77,16 @@ bool GetStringFromDictionary(CFDictionaryRef dict, CFStringRef key, std::string&
     if (!CFDictionaryGetValueIfPresent(dict, key, reinterpret_cast<const void**>(&cf))) {
         return false;
     }
-    value = convert(reinterpret_cast<CFStringRef>(cf));
+    if (cf != nullptr) {
+        const CFTypeID tid = CFGetTypeID(cf);
+        if (tid == CFStringGetTypeID()) {
+            value = convert(reinterpret_cast<CFStringRef>(cf));
+        } else if (tid == CFURLGetTypeID()) {
+            value = convert(CFURLGetString(reinterpret_cast<CFURLRef>(cf)));
+        } else {
+            std::cerr << "Unknown tid " << tid << "\n";
+        }
+    }
     return true;
 }
 
@@ -253,38 +263,21 @@ bool saveProxyToObject(CFDictionaryRef proxy, Napi::Object& object, const Napi::
     }
     object.Set("enabled", Napi::Boolean::New(env, true));
     unsigned uProxyProtocol = 0;  // 0 -- http
-    if (proxyProto == PP_HTTP) {
-        uProxyProtocol = 0;
+    if (proxyProto == PP_HTTP || proxyProto == PP_HTTPS) {
+        uProxyProtocol = (proxyProto == PP_HTTPS ? 1 : 0);
         std::string host;
         int port;
-        if (GetStringFromDictionary(proxy, kCFNetworkProxiesHTTPProxy, host)) {
+        if (GetStringFromDictionary(proxy, kCFProxyHostNameKey, host)) {
             object.Set("host", Napi::String::New(env, host.c_str()));
         }
-        if (GetNumberFromDictionary(proxy, kCFNetworkProxiesHTTPPort, port)) {
-            object.Set("port", Napi::Number::New(env, port));
-        }
-    } else if (proxyProto == PP_HTTPS) {
-        uProxyProtocol = 1;
-        std::string host;
-        int port;
-        if (GetStringFromDictionary(proxy, kCFNetworkProxiesHTTPSProxy, host)) {
-            object.Set("host", Napi::String::New(env, host.c_str()));
-        }
-        if (GetNumberFromDictionary(proxy, kCFNetworkProxiesHTTPSPort, port)) {
+        if (GetNumberFromDictionary(proxy, kCFProxyPortNumberKey, port)) {
             object.Set("port", Napi::Number::New(env, port));
         }
     } else if (proxyProto == PP_PAC) {
         uProxyProtocol = 3;
-        bool pacEnabled = false;
-        GetBoolFromDictionary(proxy, kCFNetworkProxiesProxyAutoConfigEnable, pacEnabled);
-        if (pacEnabled) {
-            std::string pacData;
-            if (GetStringFromDictionary(proxy, kCFNetworkProxiesProxyAutoConfigURLString, pacData)) {
-                object.Set("pacUrl", Napi::String::New(env, pacData.c_str()));
-            }
-            if (GetStringFromDictionary(proxy, kCFNetworkProxiesProxyAutoConfigJavaScript, pacData)) {
-                object.Set("pacScript", Napi::String::New(env, pacData.c_str()));
-            }
+        std::string pacData;
+        if (GetStringFromDictionary(proxy, kCFProxyAutoConfigurationURLKey, pacData)) {
+            object.Set("pacUrl", Napi::String::New(env, pacData.c_str()));
         }
     } else {
         return false;
@@ -340,46 +333,25 @@ Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
 
 bool dumpProxy(std::stringstream& log, CFDictionaryRef proxy)
 {
+    std::string sType;
+    if (GetStringFromDictionary(proxy, kCFProxyTypeKey, sType)) {
+        log << "Proxy type raw: " << sType;
+    }
 	PROXY_PROTO proxyProto = readProxyType(proxy);
-    if (PP_NONE == proxyProto) {
-        log << "Proxy type: DIRECT";
-        return true;
-    }
     log << "Proxy type: " << proxyProto;
-    if (proxyProto == PP_HTTP) {
-        std::string host;
-        int port;
-        if (GetStringFromDictionary(proxy, kCFNetworkProxiesHTTPProxy, host)) {
-            log << ", host:" << host;
-        }
-        if (GetNumberFromDictionary(proxy, kCFNetworkProxiesHTTPPort, port)) {
-            log << ", port:" << port;
-        }
-    } else if (proxyProto == PP_HTTPS) {
-        std::string host;
-        int port;
-        if (GetStringFromDictionary(proxy, kCFNetworkProxiesHTTPSProxy, host)) {
-            log << ", host:" << host;
-        }
-        if (GetNumberFromDictionary(proxy, kCFNetworkProxiesHTTPSPort, port)) {
-            log << ", port:" << port;
-        }
-    } else if (proxyProto == PP_PAC) {
-        bool pacEnabled = false;
-        if (GetBoolFromDictionary(proxy, kCFNetworkProxiesProxyAutoConfigEnable, pacEnabled)) {
-            log << ", pacEnabled:" << pacEnabled;
-        } else {
-            log << ", pacEnabled:<not present>";
-        }
-        std::string pacData;
-        if (GetStringFromDictionary(proxy, kCFNetworkProxiesProxyAutoConfigURLString, pacData)) {
-            log << ", pacUrl:" << pacData;
-        }
-        if (GetStringFromDictionary(proxy, kCFNetworkProxiesProxyAutoConfigJavaScript, pacData)) {
-            log << ", pacScript:" << pacData;
-        }
+    std::string host;
+    int port = 0;
+    if (GetStringFromDictionary(proxy, kCFProxyHostNameKey, host)) {
+        std::cerr << ", host:" << host << "\n";
+        log << ", host:" << host;
     }
-
+    if (GetNumberFromDictionary(proxy, kCFProxyPortNumberKey, port)) {
+        log << ", port:" << port;
+    }
+    std::string pacData;
+    if (GetStringFromDictionary(proxy, kCFProxyAutoConfigurationURLKey, pacData)) {
+        log << ", pacUrl:" << pacData;
+    }
     std::string sCredentials;
     if (GetStringFromDictionary(proxy, kCFProxyUsernameKey, sCredentials)) {
         log << ", username" << sCredentials;
@@ -390,34 +362,38 @@ bool dumpProxy(std::stringstream& log, CFDictionaryRef proxy)
     return true;
 }
 
-std::string dumpSystemHttpProxy(const Proxies& proxies)
+std::string dumpSystemProxies(const Proxies& proxies)
 {
     std::string host;
     int port = 0;
     std::stringstream s;
     s << "Sys proxy cfg: ";
+
     if (proxies.getSystemHttpProxy(host, port)) {
-        s << "HTTPEnable: yes;";
+        s << "HTTP enabled: yes;";
         s << "host: " << host;
         s << "; port: " << port;
     } else {
-        s << "HTTPEnable: no;";
+        s << "HTTP enabled: no;";
     }
-    return s.str();
-}
 
-std::string dumpSystemPacProxy(const Proxies& proxies)
-{
-    std::stringstream s;
-    s << "Sys proxy pac cfg: ";
+    if (proxies.getSystemHttpsProxy(host, port)) {
+        s << "HTTPS enabled: yes;";
+        s << "host: " << host;
+        s << "; port: " << port;
+    } else {
+        s << "HTTPS enabled: no;";
+    }
+
     std::string url, script;
     if (proxies.getSystemPacProxy(url, script)) {
-        s << "pac script: yes;";
+        s << "pac enabled: yes;";
         s << "url: '" << url;
-        s << "'; script text: '" << script << "'";
+        s << "'; script: '" << script << "'";
     } else {
-        s << "not enabled";
+        s << "pac not enabled";
     }
+
     return s.str();
 }
 
@@ -437,8 +413,9 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
         }
     }
     log << "\n";
-    log << dumpSystemHttpProxy(proxies);
-	return Napi::String::New(env, log.str());
+    log << dumpSystemProxies(proxies);
+    log << "\n";
+	return Napi::String::New(env, log.str().c_str());
 }
 
 Napi::Boolean ProxySettings::openSystemSettings(const Napi::CallbackInfo& info)
