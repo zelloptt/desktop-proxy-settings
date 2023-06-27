@@ -53,19 +53,6 @@ public:
     }
 };
 
-Napi::Boolean ProxySettings::enabled(const Napi::CallbackInfo& info)
-{
-    Napi::Env env = info.Env();
-    ProxyRegistry storage;
-    DWORD enabled = 0;
-    bool proxyEnabled = storage.get("ProxyEnable", enabled) && enabled;
-    if (!proxyEnabled) {
-        std::string pacScript;
-        proxyEnabled = storage.get("AutoConfigURL", pacScript) && !pacScript.empty();
-    }
-	return Napi::Boolean::New(env, proxyEnabled);
-}
-
 Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
 {
     DWORD enabled = 0;
@@ -92,17 +79,18 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
     return Napi::String::New(env, str);
 }
 
-Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
+Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
 {
-    DWORD enabled = 0;
+    bool enabled = false;
+    DWORD dwEnabled = 0;
     ProxyRegistry storage;
     Napi::Env env = info.Env();
     Napi::Object object = Napi::Object::New(env);
-    if (storage.get("ProxyEnable", enabled) && enabled) {
+    if (storage.get("ProxyEnable", dwEnabled) && dwEnabled) {
         std::string server;
         if (storage.get("ProxyServer", server)) {
+            enabled = true;
             object.Set("protocol", Napi::Number::New(env, 0)); // 0 -- http
-            object.Set("enabled", Napi::Boolean::New(env, true));
             std::string::size_type portOffset = server.find_last_of(L':');
             if (portOffset != std::string::npos) {
                 object.Set("host", Napi::String::New(env, server.substr(0, portOffset).c_str()));
@@ -111,17 +99,21 @@ Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
                 object.Set("host", Napi::String::New(env, server.c_str()));
             }
         } else {
-            object.Set("enabled", Napi::Boolean::New(env, true));
-        }
-    } else {
-        std::string pacScript;
-        if (storage.get("AutoConfigURL", pacScript) && !pacScript.empty()) {
-            object.Set("enabled", Napi::Boolean::New(env, true));
-            object.Set("pac", Napi::String::New(env, pacScript.c_str()));
-        } else {
-            object.Set("enabled",  Napi::Boolean::New(env, false));
+            // Unknown config, unable to parse
+            enabled = false;
         }
     }
+
+    if (!enabled) {
+        std::string pacUrl;
+        if (storage.get("AutoConfigURL", pacUrl) && !pacUrl.empty()) {
+            object.Set("protocol", Napi::Number::New(env, 3)); // 3 -- pac url
+            enabled = true;
+            object.Set("pacUrl", Napi::String::New(env, pacUrl.c_str()));
+        }
+    }
+
+    object.Set("enabled",  Napi::Boolean::New(env, enabled));
     return object;
 }
 

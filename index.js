@@ -6,17 +6,8 @@ class ProxySettings {
     this.impl = require(binding_path);
   }
 
-  isActive(url) {
-    return this.impl.enabled(url);
-  }
-
-  reload(url) {
-    if (this.impl.enabled()) {
-      return this.impl.reload(url);
-    }
-    return {
-      'enabled': false
-    }
+  read(url) {
+    return this.impl.read(url);
   }
 
   dump(url) {
