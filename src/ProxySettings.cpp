@@ -58,7 +58,7 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
     DWORD enabled = 0;
     ProxyRegistry storage;
     Napi::Env env = info.Env();
-    std::string str;
+    std::string str, pacUrl;
     if (storage.get("ProxyEnable", enabled) && enabled) {
        str.append("Proxy enabled,");
        std::string server;
@@ -71,12 +71,12 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
         } else {
             str.append("host+port=").append(server).append(",delimiter not found!");
         }
-    } else if (storage.get("AutoConfigURL", str) && !str.empty()) {
-        str.append("Proxy enabled: using pac script ").append(str);
+    } else if (storage.get("AutoConfigURL", pacUrl) && !pacUrl.empty()) {
+        str.append("Proxy enabled: using pac script ").append(pacUrl);
     } else {
         str.append("Proxy not enabled");
     }
-    return Napi::String::New(env, str);
+    return Napi::String::New(env, str.c_str());
 }
 
 Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
@@ -107,8 +107,8 @@ Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
     if (!enabled) {
         std::string pacUrl;
         if (storage.get("AutoConfigURL", pacUrl) && !pacUrl.empty()) {
-            object.Set("protocol", Napi::Number::New(env, 3)); // 3 -- pac url
             enabled = true;
+            object.Set("protocol", Napi::Number::New(env, 3)); // 3 -- pac url
             object.Set("pacUrl", Napi::String::New(env, pacUrl.c_str()));
         }
     }
