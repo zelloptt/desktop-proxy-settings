@@ -1,6 +1,6 @@
 {
   "name": "@zelloptt/desktop-proxy-settings",
-  "version": "0.9.6",
+  "version": "1.0.0",
   "description": "This package reads system proxy settings on Windows and Mac",
   "main": "index.js",
   "gypfile": true,
@@ -41,7 +41,7 @@
   "homepage": "https://github.com/zelloptt/proxy-settings#readme",
   "devDependencies": {
     "aws-sdk": "2.1387.0",
-    "np": "8.0.2"
+    "np": "8.0.4"
   },
   "np": {
     "yarn": false,

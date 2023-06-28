@@ -125,8 +125,7 @@ Napi::Boolean ProxySettings::openSystemSettings(const Napi::CallbackInfo& info)
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports)
 {
-	exports.Set(Napi::String::New(env, "enabled"), Napi::Function::New(env, ProxySettings::enabled));
-	exports.Set(Napi::String::New(env, "reload"), Napi::Function::New(env, ProxySettings::reload));
+	exports.Set(Napi::String::New(env, "read"), Napi::Function::New(env, ProxySettings::read));
 	exports.Set(Napi::String::New(env, "dump"), Napi::Function::New(env, ProxySettings::dump));
 	exports.Set(Napi::String::New(env, "openSystemSettings"), Napi::Function::New(env, ProxySettings::openSystemSettings));
 	return exports;
