@@ -38,6 +38,10 @@
       4
     ]
   },
+  "engines" : {
+    "npm" : ">=8.2.0",
+    "node" : ">=16.13.1"
+  },
   "homepage": "https://github.com/zelloptt/proxy-settings#readme",
   "devDependencies": {
     "aws-sdk": "2.1387.0",
