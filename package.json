@@ -1,6 +1,6 @@
 {
   "name": "@zelloptt/desktop-proxy-settings",
-  "version": "0.9.9",
+  "version": "0.10.0",
   "description": "This package reads system proxy settings on Windows and Mac",
   "main": "index.js",
   "gypfile": true,
@@ -38,9 +38,9 @@
       4
     ]
   },
-  "engines" : {
-    "npm" : ">=8.2.0",
-    "node" : ">=16.13.1"
+  "engines": {
+    "npm": ">=8.2.0",
+    "node": ">=16.13.1"
   },
   "homepage": "https://github.com/zelloptt/proxy-settings#readme",
   "devDependencies": {
