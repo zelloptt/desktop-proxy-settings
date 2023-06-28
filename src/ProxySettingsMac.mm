@@ -84,7 +84,7 @@ bool GetStringFromDictionary(CFDictionaryRef dict, CFStringRef key, std::string&
         } else if (tid == CFURLGetTypeID()) {
             value = convert(CFURLGetString(reinterpret_cast<CFURLRef>(cf)));
         } else {
-            std::cerr << "Unknown tid " << tid << "\n";
+            std::cerr << "Unknown tid " << tid << " while reading " << convert(key) << "\n";
         }
     }
     return true;
@@ -127,7 +127,7 @@ PROXY_PROTO readProxyType(CFDictionaryRef dict)
 
 bool isProxySupported(PROXY_PROTO proxyType)
 {
-    return PP_HTTP == proxyType || PP_HTTPS == proxyType || PP_PAC == proxyType;
+    return proxyType == PP_HTTP || proxyType == PP_HTTPS || proxyType == PP_PAC;
 }
 
 class Proxies
@@ -252,9 +252,9 @@ public:
 
 bool saveProxyToObject(CFDictionaryRef proxy, Napi::Object& object, const Napi::CallbackInfo& info)
 {
-	Napi::Env env = info.Env();
-	PROXY_PROTO proxyProto = readProxyType(proxy);
-    if (PP_NONE == proxyProto) {
+    Napi::Env env = info.Env();
+    PROXY_PROTO proxyProto = readProxyType(proxy);
+    if (proxyProto == PP_NONE) {
         object.Set("enabled", Napi::Boolean::New(env, false));
         return true;
     }
@@ -295,7 +295,7 @@ bool saveProxyToObject(CFDictionaryRef proxy, Napi::Object& object, const Napi::
 
 Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
 {
-	Napi::Env env = info.Env();
+    Napi::Env env = info.Env();
     Proxies proxies(getUrl(info));
     Napi::Object object = Napi::Object::New(env);
     if (!proxies.empty()) {
@@ -337,7 +337,7 @@ bool dumpProxy(std::stringstream& log, CFDictionaryRef proxy)
     if (GetStringFromDictionary(proxy, kCFProxyTypeKey, sType)) {
         log << "Proxy type raw: " << sType;
     }
-	PROXY_PROTO proxyProto = readProxyType(proxy);
+    PROXY_PROTO proxyProto = readProxyType(proxy);
     log << "Proxy type: " << proxyProto;
     std::string host;
     int port = 0;
@@ -415,7 +415,7 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
     log << "\n";
     log << dumpSystemProxies(proxies);
     log << "\n";
-	return Napi::String::New(env, log.str().c_str());
+    return Napi::String::New(env, log.str().c_str());
 }
 
 Napi::Boolean ProxySettings::openSystemSettings(const Napi::CallbackInfo& info)
@@ -429,8 +429,8 @@ Napi::Boolean ProxySettings::openSystemSettings(const Napi::CallbackInfo& info)
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports)
 {
-	exports.Set("read", Napi::Function::New(env, ProxySettings::read));
-	exports.Set("dump", Napi::Function::New(env, ProxySettings::dump));
-	exports.Set("openSystemSettings", Napi::Function::New(env, ProxySettings::openSystemSettings));
-	return exports;
+    exports.Set("read", Napi::Function::New(env, ProxySettings::read));
+    exports.Set("dump", Napi::Function::New(env, ProxySettings::dump));
+    exports.Set("openSystemSettings", Napi::Function::New(env, ProxySettings::openSystemSettings));
+    return exports;
 }
