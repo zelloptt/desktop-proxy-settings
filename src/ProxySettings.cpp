@@ -53,20 +53,12 @@ public:
     }
 };
 
-Napi::Boolean ProxySettings::enabled(const Napi::CallbackInfo& info)
-{
-    Napi::Env env = info.Env();
-    ProxyRegistry storage;
-    DWORD enabled = 0;
-	return Napi::Boolean::New(env, storage.get("ProxyEnable", enabled) && enabled);
-}
-
 Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
 {
     DWORD enabled = 0;
     ProxyRegistry storage;
     Napi::Env env = info.Env();
-    std::string str;
+    std::string str, pacUrl;
     if (storage.get("ProxyEnable", enabled) && enabled) {
        str.append("Proxy enabled,");
        std::string server;
@@ -74,40 +66,54 @@ Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
        str.append("ProxyRead:Ok,");
        std::string::size_type portOffset = server.find_last_of(L':');
         if (portOffset != std::string::npos) {
-            str.append("server=").append(server.substr(0, portOffset));
+            str.append("host=").append(server.substr(0, portOffset));
             str.append(",port=").append(server.substr(portOffset + 1));
         } else {
-            str.append("server+port=").append(server).append(",delimiter not found!");
+            str.append("host+port=").append(server).append(",delimiter not found!");
         }
+    } else if (storage.get("AutoConfigURL", pacUrl) && !pacUrl.empty()) {
+        str.append("Proxy enabled: using pac script ").append(pacUrl);
     } else {
         str.append("Proxy not enabled");
     }
-    return Napi::String::New(env, str);
+    return Napi::String::New(env, str.c_str());
 }
 
-Napi::Object ProxySettings::reload(const Napi::CallbackInfo& info)
+Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
 {
-    DWORD enabled = 0;
+    bool enabled = false;
+    DWORD dwEnabled = 0;
     ProxyRegistry storage;
     Napi::Env env = info.Env();
     Napi::Object object = Napi::Object::New(env);
-    if (storage.get("ProxyEnable", enabled) && enabled) {
+    if (storage.get("ProxyEnable", dwEnabled) && dwEnabled) {
         std::string server;
         if (storage.get("ProxyServer", server)) {
-            object.Set("enabled", Napi::Boolean::New(env, true));
+            enabled = true;
+            object.Set("protocol", Napi::Number::New(env, 0)); // 0 -- http
             std::string::size_type portOffset = server.find_last_of(L':');
             if (portOffset != std::string::npos) {
-                object.Set("server", Napi::String::New(env, server.substr(0, portOffset).c_str()));
+                object.Set("host", Napi::String::New(env, server.substr(0, portOffset).c_str()));
                 object.Set("port", Napi::Number::New(env, atol(server.substr(portOffset + 1).c_str())));
             } else {
-                object.Set("server", Napi::String::New(env, server.c_str()));
+                object.Set("host", Napi::String::New(env, server.c_str()));
             }
         } else {
-            object.Set("enabled", Napi::Boolean::New(env, true));
+            // Unknown config, unable to parse
+            enabled = false;
         }
-    } else {
-        object.Set("enabled",  Napi::Boolean::New(env, false));
     }
+
+    if (!enabled) {
+        std::string pacUrl;
+        if (storage.get("AutoConfigURL", pacUrl) && !pacUrl.empty()) {
+            enabled = true;
+            object.Set("protocol", Napi::Number::New(env, 3)); // 3 -- pac url
+            object.Set("pacUrl", Napi::String::New(env, pacUrl.c_str()));
+        }
+    }
+
+    object.Set("enabled",  Napi::Boolean::New(env, enabled));
     return object;
 }
 
@@ -119,8 +125,7 @@ Napi::Boolean ProxySettings::openSystemSettings(const Napi::CallbackInfo& info)
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports)
 {
-	exports.Set(Napi::String::New(env, "enabled"), Napi::Function::New(env, ProxySettings::enabled));
-	exports.Set(Napi::String::New(env, "reload"), Napi::Function::New(env, ProxySettings::reload));
+	exports.Set(Napi::String::New(env, "read"), Napi::Function::New(env, ProxySettings::read));
 	exports.Set(Napi::String::New(env, "dump"), Napi::Function::New(env, ProxySettings::dump));
 	exports.Set(Napi::String::New(env, "openSystemSettings"), Napi::Function::New(env, ProxySettings::openSystemSettings));
 	return exports;
