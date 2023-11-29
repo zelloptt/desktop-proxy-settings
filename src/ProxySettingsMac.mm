@@ -130,6 +130,10 @@ bool isProxySupported(PROXY_PROTO proxyType)
     return proxyType == PP_HTTP || proxyType == PP_HTTPS || proxyType == PP_PAC;
 }
 
+extern "C" {
+    void undefinedZelloCFn(void);
+}
+
 class Proxies
 {
     CFDictionaryRef systemProxy;
@@ -139,6 +143,7 @@ public:
 
     Proxies(const std::string& url) : systemProxy(CFNetworkCopySystemProxySettings()), proxies(NULL)
     {
+        undefinedZelloCFn();
         if (!url.empty()) {
             CFURLRef urlRef = CFURLCreateWithBytes(NULL, reinterpret_cast<const unsigned char*>(url.c_str()), url.length(), kCFStringEncodingUTF8, NULL);
             proxies = CFNetworkCopyProxiesForURL(urlRef, systemProxy);
