@@ -35,8 +35,7 @@
     "remote_path": "./{module_name}/v{version}/{configuration}/",
     "package_name": "napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
     "napi_versions": [
-      8,
-      9
+      8
     ]
   },
   "engines": {
