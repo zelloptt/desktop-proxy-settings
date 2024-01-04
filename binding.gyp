@@ -1,8 +1,8 @@
 {
     "targets": [{
         "target_name": "<(module_name)",
-        "cflags!": [ "-fno-exceptions" ],
-        "cflags_cc!": [ "-fno-exceptions" ],
+        "cflags!": [ "-fexceptions" ],
+        "cflags_cc!": [ "-fexceptions" ],
         "sources": [
         ],
       	"conditions":[
@@ -27,10 +27,13 @@
                 },
                 "cflags+": ["-fvisibility=hidden"],
                 "xcode_settings": {
-                "GCC_SYMBOLS_PRIVATE_EXTERN": "YES"
+                    "GCC_SYMBOLS_PRIVATE_EXTERN": "YES",
+                    "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
+                    "CLANG_CXX_LIBRARY": "libc++",
+                    "MACOSX_DEPLOYMENT_TARGET": "10.7",
                 },
                 "libraries": [
-                    '-framework CoreFoundation'
+                    '-framework Foundation'
                 ]
       		}],
         	["OS=='win'", {

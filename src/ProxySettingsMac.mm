@@ -216,7 +216,10 @@ public:
         }
         if (enabled) {
             GetStringFromDictionary(systemProxy, kCFNetworkProxiesProxyAutoConfigURLString, url);
-            GetStringFromDictionary(systemProxy, kCFNetworkProxiesProxyAutoConfigJavaScript, script);
+            // some hosts unable to find this constant: kCFNetworkProxiesProxyAutoConfigJavaScript
+            // temp disable this option
+            // https://zelloptt.atlassian.net/browse/DESKTOP-136
+            // GetStringFromDictionary(systemProxy, kCFNetworkProxiesProxyAutoConfigJavaScript, script);
             if (url.empty() && script.empty()) {
                 enabled = false;
             }
