@@ -44,7 +44,7 @@
   },
   "homepage": "https://github.com/zelloptt/proxy-settings#readme",
   "devDependencies": {
-    "aws-sdk": "2.1506.0",
+    "aws-sdk": "2.1529.0",
     "np": "8.0.4"
   },
   "np": {

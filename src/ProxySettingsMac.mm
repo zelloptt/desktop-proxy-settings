@@ -130,10 +130,6 @@ bool isProxySupported(PROXY_PROTO proxyType)
     return proxyType == PP_HTTP || proxyType == PP_HTTPS || proxyType == PP_PAC;
 }
 
-extern "C" {
-    void undefinedZelloCFn(void);
-}
-
 class Proxies
 {
     CFDictionaryRef systemProxy;
@@ -143,7 +139,6 @@ public:
 
     Proxies(const std::string& url) : systemProxy(CFNetworkCopySystemProxySettings()), proxies(NULL)
     {
-        undefinedZelloCFn();
         if (!url.empty()) {
             CFURLRef urlRef = CFURLCreateWithBytes(NULL, reinterpret_cast<const unsigned char*>(url.c_str()), url.length(), kCFStringEncodingUTF8, NULL);
             proxies = CFNetworkCopyProxiesForURL(urlRef, systemProxy);
@@ -221,7 +216,10 @@ public:
         }
         if (enabled) {
             GetStringFromDictionary(systemProxy, kCFNetworkProxiesProxyAutoConfigURLString, url);
-            GetStringFromDictionary(systemProxy, kCFNetworkProxiesProxyAutoConfigJavaScript, script);
+            // some hosts unable to find this constant: kCFNetworkProxiesProxyAutoConfigJavaScript
+            // temp disable this option
+            // https://zelloptt.atlassian.net/browse/DESKTOP-136
+            // GetStringFromDictionary(systemProxy, kCFNetworkProxiesProxyAutoConfigJavaScript, script);
             if (url.empty() && script.empty()) {
                 enabled = false;
             }
