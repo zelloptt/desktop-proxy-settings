@@ -1,6 +1,6 @@
 {
   "name": "@zelloptt/desktop-proxy-settings",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "This package reads system proxy settings on Windows and Mac",
   "main": "index.js",
   "gypfile": true,
@@ -35,7 +35,8 @@
     "remote_path": "./{module_name}/v{version}/{configuration}/",
     "package_name": "napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
     "napi_versions": [
-      8, 9
+      8,
+      9
     ]
   },
   "engines": {
