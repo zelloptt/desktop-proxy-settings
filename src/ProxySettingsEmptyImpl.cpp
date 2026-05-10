@@ -3,7 +3,9 @@
 Napi::Object ProxySettings::read(const Napi::CallbackInfo& info)
 {
 	Napi::Env env = info.Env();
-	return Napi::Object::New(env);
+	Napi::Object object = Napi::Object::New(env);
+	object.Set("enabled", Napi::Boolean::New(env, false));
+	return object;
 }
 
 Napi::String ProxySettings::dump(const Napi::CallbackInfo& info)
